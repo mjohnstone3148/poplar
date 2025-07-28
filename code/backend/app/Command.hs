@@ -126,6 +126,8 @@ addActionNode createdByParticipantId parentNodeId description' poplar =
   in
     addChildNode parentNodeId newNode Nothing incrementedPoplar
 
+
+
 addPaymentNode :: Poplar -> Poplar
 addPaymentNode = error "nyi"
 
@@ -148,7 +150,7 @@ addChildNode parentNodeId nodeToAdd requiredParentDay poplar =
           then poplar {tree = updatedTree}
           else error "Attempted to add a node with an invalid Day"
       NonRootNodeRef parentNodeId' ->
-        let updatedRootChildren = map (addChildToTreeNode parentNodeId' nodeToAdd) children
+        let updatedRootChildren = map (addChildToTreeNode parentNodeId' nodeToAdd requiredParentDay rootDay) children
             updatedRootNode = RootNode rootDay rootState updatedRootChildren
         in
           poplar {tree = tree' {rootNode = updatedRootNode}}
@@ -157,24 +159,24 @@ dayMatchesRequirement :: Day -> Maybe Day -> Bool
 dayMatchesRequirement _ Nothing = True
 dayMatchesRequirement (Day d) (Just (Day requiredDay)) = d == requiredDay
 
-addChildToTreeNode :: Int -> TreeNode -> TreeNode -> TreeNode
-addChildToTreeNode parentNodeId nodeToAdd possibleParentNode =
+addChildToTreeNode :: Int -> TreeNode -> Maybe Day -> Day -> TreeNode -> TreeNode
+addChildToTreeNode parentNodeId nodeToAdd requiredParentDay currentDay possibleParentNode =
   case possibleParentNode of
     StateNode day state children ->
       let (StateId stateNodeId) = stateId state
       in
         if stateNodeId == parentNodeId
         then StateNode day state (nodeToAdd : children)
-        else StateNode day state (map (addChildToTreeNode parentNodeId nodeToAdd) children)
+        else StateNode day state (map (addChildToTreeNode parentNodeId nodeToAdd requiredParentDay day) children)
     PaymentNode payment children ->
       let (PaymentId paymentNodeId) = paymentId payment
       in
         if paymentNodeId == parentNodeId
         then PaymentNode payment (nodeToAdd : children)
-        else PaymentNode payment (map (addChildToTreeNode parentNodeId nodeToAdd) children)
+        else PaymentNode payment (map (addChildToTreeNode parentNodeId nodeToAdd requiredParentDay currentDay) children)
     ActionNode action children ->
       let (ActionId actionNodeId) = actionId action
       in
         if actionNodeId == parentNodeId
         then ActionNode action (nodeToAdd : children)
-        else ActionNode action (map (addChildToTreeNode parentNodeId nodeToAdd) children)
+        else ActionNode action (map (addChildToTreeNode parentNodeId nodeToAdd requiredParentDay currentDay) children)

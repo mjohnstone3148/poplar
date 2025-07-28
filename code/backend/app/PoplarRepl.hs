@@ -7,6 +7,8 @@ import Poplar
 import Command
 import Query
 import Measurement
+import Time
+import Tree
 
 examplePoplar :: Poplar
 examplePoplar =
@@ -24,7 +26,10 @@ examplePoplar =
     state3 = executeCommands [
       setUserPreferenceToSpecificValue alice xMeasurementId 10010,
       submitMeasurementForToday alice xMeasurementId (Value 1),
-      addActionNode alice Nothing "Multiply X by 2"
+      addActionNode alice RootNodeRef "Multiply X by 2",
+      addStateNode alice RootNodeRef (Day 2) [
+          Measurement {definitionId = xMeasurementId, value = Value 2}
+          ]
       ] afterAddingXMeasurement
   in state3
 

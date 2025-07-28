@@ -29,6 +29,9 @@ instance ToJSON TreeNode where
 instance ToJSON RootNode where
   toEncoding = genericToEncoding defaultOptions
 
+data NodeReference = RootNodeRef
+                   | NonRootNodeRef Int
+
 emptyTree :: StateId -> Tree
 emptyTree rootStateId = Tree {
   rootNode = RootNode (Day 1) (State {stateId = rootStateId, measurements = []}) []

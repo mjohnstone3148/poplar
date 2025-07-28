@@ -8,6 +8,7 @@ import Tree
 import State
 import Action
 import Payment
+import Time
 
 executeCommands :: [Poplar -> Poplar] -> Poplar -> Poplar
 executeCommands commands poplar = foldl (\p command -> command p) poplar commands
@@ -101,20 +102,29 @@ startPlanningPhase = error "nyi"
 endPlanningPhase :: Poplar -> Poplar
 endPlanningPhase = error "nyi"
 
-addStateNode :: Poplar -> Poplar
-addStateNode = error "nyi"
+addStateNode :: ParticipantId -> NodeReference -> Day -> [Measurement] -> Poplar -> Poplar
+addStateNode _ parentNodeId (Day d) measurements' poplar =
+  let
+    (newNodeId, incrementedPoplar) = incrementId poplar
+    newNode = StateNode (Day d) (State {
+                                stateId = StateId newNodeId,
+                                measurements = measurements'
+                                }) []
+  in
+    addChildNode parentNodeId newNode (Just (Day (d - 1))) incrementedPoplar
 
-addActionNode :: ParticipantId -> Maybe Int -> String -> Poplar -> Poplar
+addActionNode :: ParticipantId -> NodeReference -> String -> Poplar -> Poplar
 addActionNode createdByParticipantId parentNodeId description' poplar =
   let
-    newNodeId = nextId poplar
+    (newNodeId, incrementedPoplar) = incrementId poplar
     newNode = ActionNode Action {
       actionId = ActionId newNodeId,
       createdBy = createdByParticipantId,
       Action.description = description'
       } []
+    
   in
-    addChildNode parentNodeId newNode poplar
+    addChildNode parentNodeId newNode Nothing incrementedPoplar
 
 addPaymentNode :: Poplar -> Poplar
 addPaymentNode = error "nyi"
@@ -123,22 +133,29 @@ allocateCreditsToState :: Poplar -> Poplar
 allocateCreditsToState = error "nyi"
 
 -- TODO Optimise this
-addChildNode :: Maybe Int -> TreeNode -> Poplar -> Poplar
-addChildNode parentNodeId nodeToAdd poplar =
+addChildNode :: NodeReference -> TreeNode -> Maybe Day -> Poplar -> Poplar
+addChildNode parentNodeId nodeToAdd requiredParentDay poplar =
   let tree' = tree poplar
       (RootNode rootDay rootState children) = rootNode tree'
   in
     case parentNodeId of
-      Nothing ->
+      RootNodeRef ->
         -- Add to the root node
         let updatedRootNode = RootNode rootDay rootState (nodeToAdd : children)
             updatedTree = tree' {rootNode = updatedRootNode}
-        in poplar {tree = updatedTree}
-      Just parentNodeId' ->
+        in
+          if dayMatchesRequirement rootDay requiredParentDay
+          then poplar {tree = updatedTree}
+          else error "Attempted to add a node with an invalid Day"
+      NonRootNodeRef parentNodeId' ->
         let updatedRootChildren = map (addChildToTreeNode parentNodeId' nodeToAdd) children
             updatedRootNode = RootNode rootDay rootState updatedRootChildren
         in
           poplar {tree = tree' {rootNode = updatedRootNode}}
+
+dayMatchesRequirement :: Day -> Maybe Day -> Bool
+dayMatchesRequirement _ Nothing = True
+dayMatchesRequirement (Day d) (Just (Day requiredDay)) = d == requiredDay
 
 addChildToTreeNode :: Int -> TreeNode -> TreeNode -> TreeNode
 addChildToTreeNode parentNodeId nodeToAdd possibleParentNode =

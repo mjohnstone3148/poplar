@@ -22,3 +22,8 @@ emptyPoplar = Poplar {
   participants = [],
   nextId = 2
   }
+
+incrementId :: Poplar -> (Int, Poplar)
+incrementId poplar =
+  let myId = nextId poplar
+  in (myId, poplar {nextId = myId + 1})

@@ -15,7 +15,6 @@ data StateId = StateId Int
 
 instance ToJSON State where
   toEncoding = genericToEncoding defaultOptions
-
   
 instance ToJSON StateId where
   toEncoding = genericToEncoding defaultOptions

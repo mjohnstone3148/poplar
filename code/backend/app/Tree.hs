@@ -9,12 +9,15 @@ import State
 import Action
 
 data Tree = Tree {
-  rootNode :: TreeNode
+  rootNode :: RootNode
   } deriving (Show, Generic)
 
 data TreeNode = StateNode Day State [TreeNode]
               | PaymentNode Payment [TreeNode]
               | ActionNode Action [TreeNode]
+              deriving (Show, Generic)
+
+data RootNode = RootNode Day State [TreeNode]
               deriving (Show, Generic)
 
 instance ToJSON Tree where
@@ -23,7 +26,10 @@ instance ToJSON Tree where
 instance ToJSON TreeNode where
   toEncoding = genericToEncoding defaultOptions
 
+instance ToJSON RootNode where
+  toEncoding = genericToEncoding defaultOptions
+
 emptyTree :: StateId -> Tree
 emptyTree rootStateId = Tree {
-  rootNode = StateNode (Day 1) (State {stateId = rootStateId, measurements = []}) []
+  rootNode = RootNode (Day 1) (State {stateId = rootStateId, measurements = []}) []
   }

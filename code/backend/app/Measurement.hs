@@ -19,7 +19,6 @@ instance ToJSON MeasurementDefinition where
 data MeasurementDefinitionId =  MeasurementDefinitionId Int
                              deriving (Eq, Show, Generic)
 
-
 data Measurement = Measurement {
   definitionId :: MeasurementDefinitionId,
   value :: Value

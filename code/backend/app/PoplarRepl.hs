@@ -6,6 +6,7 @@ import Data.Aeson.Encode.Pretty
 import Poplar
 import Command
 import Query
+import Measurement
 
 examplePoplar :: Poplar
 examplePoplar =
@@ -20,7 +21,10 @@ examplePoplar =
     xMeasurementId = head $ getMeasurementDefinitionIds afterAddingXMeasurement
 
     -- Alice wants the value to be 2x5x7x11x13 = 10,010
-    state3 = setUserPreferenceToSpecificValue alice xMeasurementId 10010 afterAddingXMeasurement 
+    state3 = executeCommands [
+      setUserPreferenceToSpecificValue alice xMeasurementId 10010,
+      submitMeasurementForToday alice xMeasurementId (Value 1)
+      ] afterAddingXMeasurement
   
   in state3
 

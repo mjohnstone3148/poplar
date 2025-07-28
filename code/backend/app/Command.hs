@@ -4,6 +4,8 @@ import Poplar
 import Participant
 import Credits
 import Measurement
+import Tree
+import State
 
 
 executeCommands :: [Poplar -> Poplar] -> Poplar -> Poplar
@@ -56,3 +58,56 @@ setUserPreferenceToSpecificValue participantId' measurementDefinitionId' require
     poplar {
     participants = updatedParticipants
     }
+
+submitMeasurementForToday :: ParticipantId -> MeasurementDefinitionId -> Value -> Poplar -> Poplar
+submitMeasurementForToday participantId' measurementDefinitionId' value' poplar =
+  if not (participantDefinedMeasurement poplar participantId' measurementDefinitionId')
+  then error "The given participant did not define the given measurement"
+  else
+    let measurementToAdd = Measurement {
+          definitionId = measurementDefinitionId',
+          value = value'
+          }
+        tree' = tree poplar
+        (RootNode todayDay todayState children) = rootNode tree'
+    in
+      if measurementAlreadyProvided todayState measurementDefinitionId'
+      then error "The given measurement has already been entered for today"
+      else
+        let updatedMeasurements = measurementToAdd : (measurements todayState)
+            updatedState = todayState {measurements = updatedMeasurements}
+            updatedRootNode = (RootNode todayDay updatedState children)
+            updatedTree = tree' {rootNode = updatedRootNode}
+        in poplar {tree = updatedTree}
+
+measurementAlreadyProvided :: State -> MeasurementDefinitionId -> Bool
+measurementAlreadyProvided state measurementDefinitionId' =
+  any (\m -> definitionId m == measurementDefinitionId') (measurements state)
+
+participantDefinedMeasurement :: Poplar -> ParticipantId -> MeasurementDefinitionId -> Bool
+participantDefinedMeasurement poplar participantId' measurementDefinitionId' =
+  let
+    participants' = participants poplar
+    matchingParticipants = filter (\p -> participantId p == participantId') participants'
+  in
+    case matchingParticipants of
+      [participant] -> any (\md -> measurementDefinitionId md == measurementDefinitionId') (measurementDefinitions participant)
+      _ -> False
+
+startPlanningPhase :: Poplar -> Poplar
+startPlanningPhase = error "nyi"
+
+endPlanningPhase :: Poplar -> Poplar
+endPlanningPhase = error "nyi"
+
+addStateNode :: Poplar -> Poplar
+addStateNode = error "nyi"
+
+addActionNode :: Poplar -> Poplar
+addActionNode = error "nyi"
+
+addPaymentNode :: Poplar -> Poplar
+addPaymentNode = error "nyi"
+
+allocateCreditsToState :: Poplar -> Poplar
+allocateCreditsToState = error "nyi"

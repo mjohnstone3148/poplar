@@ -23,9 +23,9 @@ examplePoplar =
     -- Alice wants the value to be 2x5x7x11x13 = 10,010
     state3 = executeCommands [
       setUserPreferenceToSpecificValue alice xMeasurementId 10010,
-      submitMeasurementForToday alice xMeasurementId (Value 1)
+      submitMeasurementForToday alice xMeasurementId (Value 1),
+      addActionNode alice Nothing "Multiply X by 2"
       ] afterAddingXMeasurement
-  
   in state3
 
 assumeSuccess :: Maybe a -> a

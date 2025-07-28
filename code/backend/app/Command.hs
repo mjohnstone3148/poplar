@@ -6,7 +6,8 @@ import Credits
 import Measurement
 import Tree
 import State
-
+import Action
+import Payment
 
 executeCommands :: [Poplar -> Poplar] -> Poplar -> Poplar
 executeCommands commands poplar = foldl (\p command -> command p) poplar commands
@@ -33,7 +34,7 @@ defineNewMeasurement definerId measurementName measurementDescription poplar =
         newMeasurementDefinition = MeasurementDefinition {
           measurementDefinitionId = MeasurementDefinitionId newDefinitionId,
           Measurement.name = measurementName,
-          description = measurementDescription
+          Measurement.description = measurementDescription
           }
         updatedParticipants =
           map (\participant ->
@@ -103,11 +104,60 @@ endPlanningPhase = error "nyi"
 addStateNode :: Poplar -> Poplar
 addStateNode = error "nyi"
 
-addActionNode :: Poplar -> Poplar
-addActionNode = error "nyi"
+addActionNode :: ParticipantId -> Maybe Int -> String -> Poplar -> Poplar
+addActionNode createdByParticipantId parentNodeId description' poplar =
+  let
+    newNodeId = nextId poplar
+    newNode = ActionNode Action {
+      actionId = ActionId newNodeId,
+      createdBy = createdByParticipantId,
+      Action.description = description'
+      } []
+  in
+    addChildNode parentNodeId newNode poplar
 
 addPaymentNode :: Poplar -> Poplar
 addPaymentNode = error "nyi"
 
 allocateCreditsToState :: Poplar -> Poplar
 allocateCreditsToState = error "nyi"
+
+-- TODO Optimise this
+addChildNode :: Maybe Int -> TreeNode -> Poplar -> Poplar
+addChildNode parentNodeId nodeToAdd poplar =
+  let tree' = tree poplar
+      (RootNode rootDay rootState children) = rootNode tree'
+  in
+    case parentNodeId of
+      Nothing ->
+        -- Add to the root node
+        let updatedRootNode = RootNode rootDay rootState (nodeToAdd : children)
+            updatedTree = tree' {rootNode = updatedRootNode}
+        in poplar {tree = updatedTree}
+      Just parentNodeId' ->
+        let updatedRootChildren = map (addChildToTreeNode parentNodeId' nodeToAdd) children
+            updatedRootNode = RootNode rootDay rootState updatedRootChildren
+        in
+          poplar {tree = tree' {rootNode = updatedRootNode}}
+
+addChildToTreeNode :: Int -> TreeNode -> TreeNode -> TreeNode
+addChildToTreeNode parentNodeId nodeToAdd possibleParentNode =
+  case possibleParentNode of
+    StateNode day state children ->
+      let (StateId stateNodeId) = stateId state
+      in
+        if stateNodeId == parentNodeId
+        then StateNode day state (nodeToAdd : children)
+        else StateNode day state (map (addChildToTreeNode parentNodeId nodeToAdd) children)
+    PaymentNode payment children ->
+      let (PaymentId paymentNodeId) = paymentId payment
+      in
+        if paymentNodeId == parentNodeId
+        then PaymentNode payment (nodeToAdd : children)
+        else PaymentNode payment (map (addChildToTreeNode parentNodeId nodeToAdd) children)
+    ActionNode action children ->
+      let (ActionId actionNodeId) = actionId action
+      in
+        if actionNodeId == parentNodeId
+        then ActionNode action (nodeToAdd : children)
+        else ActionNode action (map (addChildToTreeNode parentNodeId nodeToAdd) children)

@@ -122,14 +122,22 @@ addActionNode createdByParticipantId parentNodeId description' poplar =
       createdBy = createdByParticipantId,
       Action.description = description'
       } []
-    
+
   in
     addChildNode parentNodeId newNode Nothing incrementedPoplar
 
-
-
-addPaymentNode :: Poplar -> Poplar
-addPaymentNode = error "nyi"
+addPaymentNode :: ParticipantId -> NodeReference -> CreditsAmount -> Poplar -> Poplar
+addPaymentNode createdByParticipantId parentNodeId paymentAmount poplar =
+  let
+    (newNodeId, incrementedPoplar) = incrementId poplar
+    newNode = PaymentNode Payment {
+      paymentId = PaymentId newNodeId,
+      toParticipant = createdByParticipantId,
+      amount = paymentAmount
+      } []
+    
+  in
+    addChildNode parentNodeId newNode Nothing incrementedPoplar
 
 allocateCreditsToState :: Poplar -> Poplar
 allocateCreditsToState = error "nyi"

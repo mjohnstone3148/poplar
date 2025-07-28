@@ -9,6 +9,7 @@ import Query
 import Measurement
 import Time
 import Tree
+import Credits
 
 examplePoplar :: Poplar
 examplePoplar =
@@ -29,7 +30,8 @@ examplePoplar =
       addActionNode alice RootNodeRef "Multiply X by 2",
       addStateNode alice RootNodeRef (Day 2) [
           Measurement {definitionId = xMeasurementId, value = Value 2}
-          ]
+          ],
+      addPaymentNode alice RootNodeRef (CreditsAmount 50)
       ] afterAddingXMeasurement
   in state3
 
